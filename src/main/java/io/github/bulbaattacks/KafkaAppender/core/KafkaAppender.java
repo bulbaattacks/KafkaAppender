@@ -1,8 +1,10 @@
 package io.github.bulbaattacks.KafkaAppender.core;
 
-import io.github.bulbaattacks.KafkaAppender.config.KafkaConfig;
+import io.github.bulbaattacks.KafkaAppender.util.PropertiesElement;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -12,7 +14,6 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.Serializable;
 import java.util.Properties;
@@ -59,21 +60,25 @@ public class KafkaAppender extends AbstractAppender {
             @PluginAttribute("topic") String topic,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") Filter filter,
-            @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) boolean ignoreExceptions) {
+            @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) boolean ignoreExceptions,
+            @PluginElement("Properties") PropertiesElement propertiesElement) {
 
         if (name == null) {
             LOGGER.error("Не указано имя для KafkaAppender");
             return null;
         }
-
-        if (layout == null) {
-            LOGGER.error("Не указан layout для KafkaAppender, использую PatternLayout по умолчанию");
-            layout = PatternLayout.newBuilder()
-                    .withPattern("%d{ISO8601} %-5p %c - %m%n")
-                    .build();
+        if (topic == null) {
+            LOGGER.error("Не указан топик для KafkaAppender");
+            return null;
         }
 
-        Properties props = KafkaConfig.buildDefaultProperties();
+        Properties props = new Properties();
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        if (propertiesElement != null) {
+            props.putAll(propertiesElement.getProperties());
+        }
         return new KafkaAppender(name, filter, layout, ignoreExceptions, topic, props);
     }
 }
