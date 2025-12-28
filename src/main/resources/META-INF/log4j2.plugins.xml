@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Plugins>
+    <Plugin name="KafkaAppender"
+            category="Core"
+            class="io.github.bulbaattacks.KafkaAppender.core.KafkaAppender.java"/>
+</Plugins>
